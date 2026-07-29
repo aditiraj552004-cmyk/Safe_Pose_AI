@@ -1,0 +1,73 @@
+# ----------------------------
+# Python
+# ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+venv-1/
+env/
+ENV/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Python Distribution
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+logs/*.log
+
+# Model Checkpoints (optional)
+*.h5
+*.keras
+*.ckpt
+
+# TensorFlow
+checkpoint
+
+# Environment Variables
+.env
+
+# Cache Files
+.cache/
+
+# Temporary Files
+*.tmp
+*.temp
+
+# Python Cache
+.pytest_cache/
+.mypy_cache/
+
+# Dataset (ignore if too large)
+Fall_Dataset_Gray/
+csv_data/
+
+# Processed Data (optional if large)
+processed_data/
+
+# Trained Models (optional if large)
+models/
+
+# Generated Fall Logs
+logs/fall_history.csv

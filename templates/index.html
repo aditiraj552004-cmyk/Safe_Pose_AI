@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SafePose AI</title>
+
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<header>
+
+<h1>🩺 SafePose AI</h1>
+
+<p>
+Real-Time Fall Detection Dashboard
+</p>
+
+</header>
+
+
+
+
+<div class="dashboard">
+
+
+<!-- Camera -->
+
+<div class="card">
+
+
+<h2>📷 Live Camera</h2>
+
+
+<img
+id="video"
+src="{{ url_for('video_feed') }}"
+alt="Camera Feed">
+
+
+</div>
+
+
+
+
+<!-- Status -->
+
+
+<div class="card">
+
+
+<h2>Current Status</h2>
+
+
+<h1 id="status">
+Loading...
+</h1>
+
+
+<h2 id="confidence">
+0%
+</h2>
+
+
+
+<div id="alarm">
+
+⚠ FALL DETECTED
+
+</div>
+
+
+
+<button onclick="resetAlarm()">
+
+Reset Alarm
+
+</button>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<!-- History -->
+
+
+<div class="card history">
+
+
+<h2>
+📋 Fall Detection History
+</h2>
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>Time</th>
+
+<th>Confidence</th>
+
+<th>Status</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody id="history">
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+</div>
+
+
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/alarm.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+
+
+</body>
+
+</html>
