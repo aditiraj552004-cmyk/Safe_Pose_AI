@@ -1,3 +1,4 @@
+import time
 from flask import Flask, render_template, Response, jsonify
 import realtime_detection
 
@@ -17,7 +18,7 @@ alarm_status = {
 
     "fall_detected": False,
     "confidence": 0,
-    "time": ""
+    "time": 0
 
 }
 
@@ -109,84 +110,56 @@ def video_feed():
 @app.route("/status")
 def status():
 
-
-    prediction = (
-        realtime_detection.latest_prediction
-    )
-
-
-    confidence = (
-        realtime_detection.latest_confidence * 100
-    )
-
-
+    prediction = realtime_detection.latest_prediction
+    confidence = realtime_detection.latest_confidence * 100
 
     # ---------------------------
-    # Fall Detection
+    # Fall Detected
     # ---------------------------
+    if prediction == "FALL DETECTED":
 
-    if prediction == "Fall":
+        # Trigger only once for each new fall
+        if not alarm_status["fall_detected"]:
 
+            alarm_status["fall_detected"] = True
+            alarm_status["confidence"] = round(confidence, 2)
 
-        alarm_status["fall_detected"] = True
+            # Store current timestamp (seconds)
+            alarm_status["time"] = time.time()
 
+            save_fall_event(round(confidence, 2))
 
-        alarm_status["confidence"] = round(
-            confidence,
-            2
-        )
-
-
-        alarm_status["time"] = str(
-            datetime.now()
-        )
-
-
-        # Save event
-        save_fall_event(
-            round(confidence,2)
-        )
-
-
+    # ---------------------------
+    # Normal Condition
+    # ---------------------------
     else:
 
-
+        # Stop alarm automatically when person is normal
         alarm_status["fall_detected"] = False
 
+    # ---------------------------
+    # Auto Reset After 10 Seconds
+    # ---------------------------
+    if alarm_status["fall_detected"]:
 
+        elapsed = time.time() - alarm_status["time"]
 
+        if elapsed >= 10:
+
+            alarm_status["fall_detected"] = False
+
+    # ---------------------------
+    # Return Status
+    # ---------------------------
     return jsonify({
 
-        "prediction":
-        prediction,
+        "prediction": prediction,
 
+        "confidence": round(confidence, 2),
 
-        "confidence":
-        round(
-            confidence,
-            2
-        ),
-
-
-        "alarm":
-        alarm_status["fall_detected"]
+        "alarm": alarm_status["fall_detected"]
 
     })
-
-
-
-# -------------------------------
-# Alarm API (Frontend JS)
-# -------------------------------
-
-@app.route("/alarm")
-def alarm():
-
-    return jsonify(
-        alarm_status
-    )
-
-
 
 # -------------------------------
 # Reset Alarm
@@ -195,15 +168,12 @@ def alarm():
 @app.route("/reset_alarm")
 def reset_alarm():
 
-
     alarm_status["fall_detected"] = False
-
+    alarm_status["confidence"] = 0
+    alarm_status["time"] = 0
 
     return jsonify({
-
-        "message":
-        "Alarm Reset"
-
+        "message": "Alarm Reset"
     })
 
 

@@ -1,112 +1,81 @@
+// ===============================
 // alarm.js
+// ===============================
 
+// Alarm sound
+let alarmSound = new Audio("/static/alarm.mp3");
+alarmSound.loop = true;
 
-
-let alarmSound = new Audio(
-    "/static/alarm.mp3"
-);
-
-
-
-// Prevent multiple alarms
-
+// Alarm state
 let alarmPlaying = false;
 
+// -------------------------------
+// Show Alarm
+// -------------------------------
+function showAlarm() {
 
+    const alarmBox = document.getElementById("alarm");
 
-function showAlarm(){
+    alarmBox.style.display = "block";
 
-
-    let alarmBox =
-    document.getElementById(
-        "alarm"
-    );
-
-
-    alarmBox.style.display =
-    "block";
-
-
-
-    if(!alarmPlaying)
-    {
-
-        alarmSound.play();
+    if (!alarmPlaying) {
 
         alarmPlaying = true;
 
+        alarmSound.currentTime = 0;
+
+        alarmSound.play()
+        .then(() => {
+            console.log("Alarm Started");
+        })
+        .catch(error => {
+            console.log("Alarm Play Error:", error);
+        });
+
     }
-
-
 }
 
+// -------------------------------
+// Hide Alarm
+// -------------------------------
+function hideAlarm() {
 
+    const alarmBox = document.getElementById("alarm");
 
+    alarmBox.style.display = "none";
 
-function hideAlarm(){
+    if (alarmPlaying) {
 
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        alarmPlaying = false;
 
-    let alarmBox =
-    document.getElementById(
-        "alarm"
-    );
+        console.log("Alarm Stopped");
 
-
-    alarmBox.style.display =
-    "none";
-
-
+    }
 }
 
-
-
-
-function resetAlarm(){
-
+// -------------------------------
+// Reset Alarm
+// -------------------------------
+function resetAlarm() {
 
     fetch("/reset_alarm")
 
+    .then(response => response.json())
 
-    .then(response =>
-        response.json()
-    )
+    .then(data => {
 
-
-    .then(data=>{
-
-
-        console.log(
-            data.message
-        );
-
-
+        console.log(data.message);
 
         hideAlarm();
 
-
-
-        alarmSound.pause();
-
-
-        alarmSound.currentTime = 0;
-
-
-        alarmPlaying=false;
-
-
     })
 
+    .catch(error => {
 
-    .catch(error=>{
-
-
-        console.log(
-            "Reset Error:",
-            error
-        );
-
+        console.log("Reset Error:", error);
 
     });
-
 
 }
