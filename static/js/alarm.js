@@ -1,81 +1,60 @@
 // ===============================
-// alarm.js
+// ALARM SOUND
 // ===============================
 
-// Alarm sound
-let alarmSound = new Audio("/static/alarm.mp3");
-alarmSound.loop = true;
+const alarm = new Audio("/static/alarm.mpeg");
 
-// Alarm state
+// Loop the alarm until reset
+alarm.loop = true;
+
 let alarmPlaying = false;
 
-// -------------------------------
-// Show Alarm
-// -------------------------------
-function showAlarm() {
+// ===============================
+// CHECK FALL STATUS
+// ===============================
 
-    const alarmBox = document.getElementById("alarm");
+async function checkAlarm() {
 
-    alarmBox.style.display = "block";
+    try {
 
-    if (!alarmPlaying) {
+        const response = await fetch("/status");
+        const data = await response.json();
 
-        alarmPlaying = true;
+        if (data.alarm) {
 
-        alarmSound.currentTime = 0;
+            if (!alarmPlaying) {
 
-        alarmSound.play()
-        .then(() => {
-            console.log("Alarm Started");
-        })
-        .catch(error => {
-            console.log("Alarm Play Error:", error);
-        });
+                alarm.play().catch(err => {
+                    console.log("Audio blocked:", err);
+                });
 
-    }
-}
+                alarmPlaying = true;
+            }
 
-// -------------------------------
-// Hide Alarm
-// -------------------------------
-function hideAlarm() {
+        } else {
 
-    const alarmBox = document.getElementById("alarm");
+            if (alarmPlaying) {
 
-    alarmBox.style.display = "none";
+                alarm.pause();
+                alarm.currentTime = 0;
 
-    if (alarmPlaying) {
+                alarmPlaying = false;
+            }
 
-        alarmSound.pause();
-        alarmSound.currentTime = 0;
-        alarmPlaying = false;
+        }
 
-        console.log("Alarm Stopped");
+    } catch (err) {
+
+        console.log(err);
 
     }
-}
-
-// -------------------------------
-// Reset Alarm
-// -------------------------------
-function resetAlarm() {
-
-    fetch("/reset_alarm")
-
-    .then(response => response.json())
-
-    .then(data => {
-
-        console.log(data.message);
-
-        hideAlarm();
-
-    })
-
-    .catch(error => {
-
-        console.log("Reset Error:", error);
-
-    });
 
 }
+
+// ===============================
+// CHECK EVERY SECOND
+// ===============================
+
+setInterval(checkAlarm, 1000);
+
+checkAlarm();

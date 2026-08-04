@@ -1,141 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafePose AI</title>
 
-<meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>SafePose AI</title>
-
-
-<link rel="stylesheet"
-href="{{ url_for('static', filename='css/style.css') }}">
-
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 
 <body>
 
-<div class="background"></div>
-
 <div class="container">
 
-<header>
+    <header>
+        <h1>🩺 SafePose AI</h1>
+        <p>AI Powered Real-Time Fall Detection System</p>
+    </header>
 
-<h1>🩺 SafePose AI</h1>
+    <div class="cards">
 
-<p>Real-Time AI Fall Detection Dashboard</p>
+        <div class="card">
+            <h3>🟢 System</h3>
+            <h2>Running</h2>
+        </div>
 
-<div class="top-info">
-    <div class="info-box">
-        🟢 Camera Connected
+        <div class="card">
+            <h3>📷 Camera</h3>
+            <h2>Connected</h2>
+        </div>
+
+        <div class="card">
+            <h3>🤖 AI Model</h3>
+            <h2>Active</h2>
+        </div>
+
+        <div class="card">
+            <h3>🎯 Prediction</h3>
+            <h2 id="prediction">Loading...</h2>
+        </div>
+
     </div>
 
-    <div class="info-box" id="clock">
-        Loading Time...
+    <div class="video-section">
+
+        <img src="{{ url_for('video_feed') }}">
+
     </div>
-</div>
 
-</header>
+    <div class="confidence-box">
 
-<div class="stats">
+        <h2>Confidence</h2>
 
-<div class="stat-card">
-<h3>Total Falls</h3>
-<h1 id="totalFalls">0</h1>
-</div>
+        <div class="progress">
 
-<div class="stat-card">
-<h3>Today's Alerts</h3>
-<h1 id="todayAlerts">0</h1>
-</div>
+            <div class="progress-bar" id="progressBar"></div>
 
-<div class="stat-card">
-<h3>System</h3>
-<h1 style="color:lime;">ONLINE</h1>
-</div>
+        </div>
 
-</div>
+        <h3 id="confidence">0%</h3>
 
-<div class="dashboard">
+    </div>
 
-<div class="card">
+    <div class="graph-box">
 
-<h2>📷 Live Camera</h2>
+        <canvas id="confidenceChart"></canvas>
 
-<img id="video"
-src="{{ url_for('video_feed') }}"
-alt="Camera Feed">
+    </div>
 
-</div>
+    <div class="history">
 
-<div class="card">
+        <h2>📋 Fall History</h2>
 
-<h2>Current Status</h2>
+        <table>
 
-<div class="pulse"></div>
+            <thead>
 
-<h1 id="status">
-Loading...
-</h1>
+            <tr>
+                <th>Time</th>
+                <th>Confidence</th>
+                <th>Status</th>
+            </tr>
 
-<h2 id="confidence">
-0%
-</h2>
+            </thead>
 
-<div id="alarm">
-⚠ FALL DETECTED
-</div>
+            <tbody id="historyBody">
 
-<button onclick="resetAlarm()">
-Reset Alarm
-</button>
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 
-</div>
+<div class="popup" id="popup">
 
-<div class="card history">
-
-<h2>📋 Detection History</h2>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Time</th>
-
-<th>Confidence</th>
-
-<th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody id="history"></tbody>
-
-</table>
+    🚨 FALL DETECTED 🚨
 
 </div>
 
-</div>
-
-<script>
-setInterval(()=>{
-document.getElementById("clock").innerHTML=
-new Date().toLocaleTimeString();
-},1000);
-</script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/alarm.js') }}"></script>
-<script src="{{ url_for('static', filename='js/history.js') }}"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
 </html>

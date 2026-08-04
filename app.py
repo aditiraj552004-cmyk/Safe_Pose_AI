@@ -1,111 +1,87 @@
+import os
+import csv
 import time
+from datetime import datetime
+
 from flask import Flask, render_template, Response, jsonify
+
 import realtime_detection
 
-from datetime import datetime
-import csv
-import os
-
+# ===============================
+# FLASK APP
+# ===============================
 
 app = Flask(__name__)
 
-
-# -------------------------------
-# Global Alarm Status
-# -------------------------------
+# ===============================
+# GLOBAL ALARM STATUS
+# ===============================
 
 alarm_status = {
-
     "fall_detected": False,
     "confidence": 0,
     "time": 0
-
 }
 
+# ===============================
+# CREATE LOG FOLDER
+# ===============================
 
-# -------------------------------
-# Save Fall Event Log
-# -------------------------------
+os.makedirs("logs", exist_ok=True)
+
+LOG_FILE = "logs/fall_history.csv"
+
+# ===============================
+# SAVE FALL EVENT
+# ===============================
 
 def save_fall_event(confidence):
 
-    file_path = "logs/fall_history.csv"
+    file_exists = os.path.exists(LOG_FILE)
 
-
-    # create logs folder if not exists
-    os.makedirs("logs", exist_ok=True)
-
-
-    file_exists = os.path.isfile(file_path)
-
-
-    with open(
-        file_path,
-        "a",
-        newline=""
-    ) as file:
-
+    with open(LOG_FILE, "a", newline="") as file:
 
         writer = csv.writer(file)
 
-
         if not file_exists:
 
-            writer.writerow(
-                [
-                    "Time",
-                    "Prediction",
-                    "Confidence",
-                    "Status"
-                ]
-            )
+            writer.writerow([
+                "Time",
+                "Prediction",
+                "Confidence (%)",
+                "Status"
+            ])
 
+        writer.writerow([
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Fall Detected",
+            round(confidence, 2),
+            "Alert Sent"
+        ])
 
-        writer.writerow(
-            [
-                datetime.now(),
-                "Fall",
-                confidence,
-                "Alert Sent"
-            ]
-        )
-
-
-
-# -------------------------------
-# Home Dashboard
-# -------------------------------
+# ===============================
+# HOME PAGE
+# ===============================
 
 @app.route("/")
 def home():
+    return render_template("index.html")
 
-    return render_template(
-        "index.html"
-    )
-
-
-
-# -------------------------------
-# Live Video Feed
-# -------------------------------
+# ===============================
+# LIVE VIDEO
+# ===============================
 
 @app.route("/video_feed")
 def video_feed():
 
     return Response(
-
         realtime_detection.generate_frames(),
-
-        mimetype=
-        "multipart/x-mixed-replace; boundary=frame"
-
+        mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
-
-
-# -------------------------------
-# Prediction Status API
-# -------------------------------
+# ===============================
+# STATUS API
+# ===============================
 
 @app.route("/status")
 def status():
@@ -113,33 +89,20 @@ def status():
     prediction = realtime_detection.latest_prediction
     confidence = realtime_detection.latest_confidence * 100
 
-    # ---------------------------
-    # Fall Detected
-    # ---------------------------
     if prediction == "FALL DETECTED":
 
-        # Trigger only once for each new fall
         if not alarm_status["fall_detected"]:
 
             alarm_status["fall_detected"] = True
             alarm_status["confidence"] = round(confidence, 2)
-
-            # Store current timestamp (seconds)
             alarm_status["time"] = time.time()
 
-            save_fall_event(round(confidence, 2))
+            save_fall_event(confidence)
 
-    # ---------------------------
-    # Normal Condition
-    # ---------------------------
     else:
 
-        # Stop alarm automatically when person is normal
         alarm_status["fall_detected"] = False
 
-    # ---------------------------
-    # Auto Reset After 10 Seconds
-    # ---------------------------
     if alarm_status["fall_detected"]:
 
         elapsed = time.time() - alarm_status["time"]
@@ -148,9 +111,6 @@ def status():
 
             alarm_status["fall_detected"] = False
 
-    # ---------------------------
-    # Return Status
-    # ---------------------------
     return jsonify({
 
         "prediction": prediction,
@@ -161,9 +121,9 @@ def status():
 
     })
 
-# -------------------------------
-# Reset Alarm
-# -------------------------------
+# ===============================
+# RESET ALARM
+# ===============================
 
 @app.route("/reset_alarm")
 def reset_alarm():
@@ -173,56 +133,51 @@ def reset_alarm():
     alarm_status["time"] = 0
 
     return jsonify({
-        "message": "Alarm Reset"
+        "message": "Alarm Reset Successfully"
     })
 
-
-
-# -------------------------------
-# Fall History API
-# -------------------------------
+# ===============================
+# FALL HISTORY
+# ===============================
 
 @app.route("/history")
 def history():
 
     events = []
 
+    if os.path.exists(LOG_FILE):
 
-    file_path = (
-        "logs/fall_history.csv"
-    )
+        with open(LOG_FILE, "r") as file:
 
-
-    if os.path.exists(file_path):
-
-
-        with open(
-            file_path,
-            "r"
-        ) as file:
-
-
-            reader = csv.DictReader(
-                file
-            )
-
+            reader = csv.DictReader(file)
 
             for row in reader:
 
                 events.append(row)
 
-
-
     return jsonify(events)
 
+# ===============================
+# HEALTH CHECK
+# ===============================
 
+@app.route("/health")
+def health():
 
-# -------------------------------
-# Run Flask
-# -------------------------------
+    return jsonify({
+        "status": "running",
+        "prediction": realtime_detection.latest_prediction
+    })
+
+# ===============================
+# RUN APP
+# ===============================
 
 if __name__ == "__main__":
 
     app.run(
-        debug=True
+        host="0.0.0.0",
+        port=5000,
+        debug=True,
+        threaded=True
     )

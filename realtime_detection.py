@@ -24,6 +24,10 @@ mp_draw = mp.solutions.drawing_utils
 latest_prediction = "Loading..."
 latest_confidence = 0.0
 
+# Number of consecutive fall predictions required
+fall_counter = 0
+FALL_THRESHOLD = 5
+
 # ==========================
 # VIDEO STREAM FUNCTION
 # ==========================
@@ -32,6 +36,7 @@ def generate_frames():
 
     global latest_prediction
     global latest_confidence
+    global fall_counter
 
     pose = mp_pose.Pose(
         min_detection_confidence=0.5,
@@ -39,6 +44,10 @@ def generate_frames():
     )
 
     cap = cv2.VideoCapture(0)
+
+    if not cap.isOpened():
+        print("Cannot open webcam")
+        return
 
     sequence = deque(maxlen=30)
 
@@ -49,11 +58,13 @@ def generate_frames():
         if not success:
             break
 
+        frame = cv2.flip(frame, 1)
+
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         results = pose.process(rgb)
 
-        image = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+        image = frame.copy()
 
         landmarks = []
 
@@ -82,13 +93,22 @@ def generate_frames():
 
         if len(sequence) == 30:
 
-            X = np.expand_dims(sequence, axis=0)
+            X = np.array(sequence, dtype=np.float32)
+            X = np.expand_dims(X, axis=0)
 
             prediction = model.predict(X, verbose=0)[0][0]
 
             latest_confidence = float(prediction)
 
-            if prediction > 0.5:
+            if prediction >= 0.85:
+
+                fall_counter += 1
+
+            else:
+
+                fall_counter = 0
+
+            if fall_counter >= FALL_THRESHOLD:
 
                 latest_prediction = "FALL DETECTED"
 
@@ -102,11 +122,21 @@ def generate_frames():
 
             cv2.putText(
                 image,
-                f"{latest_prediction} ({prediction:.2f})",
+                latest_prediction,
                 (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
                 color,
+                2
+            )
+
+            cv2.putText(
+                image,
+                f"Confidence : {prediction:.2f}",
+                (20, 80),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (255,255,255),
                 2
             )
 
@@ -116,8 +146,8 @@ def generate_frames():
 
         yield (
             b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' +
-            frame +
+            b'Content-Type: image/jpeg\r\n\r\n'
+            + frame +
             b'\r\n'
         )
 
