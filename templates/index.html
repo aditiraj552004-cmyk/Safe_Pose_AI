@@ -19,103 +19,90 @@ href="{{ url_for('static', filename='css/style.css') }}">
 
 <body>
 
+<div class="background"></div>
 
 <div class="container">
-
 
 <header>
 
 <h1>🩺 SafePose AI</h1>
 
-<p>
-Real-Time Fall Detection Dashboard
-</p>
+<p>Real-Time AI Fall Detection Dashboard</p>
+
+<div class="top-info">
+    <div class="info-box">
+        🟢 Camera Connected
+    </div>
+
+    <div class="info-box" id="clock">
+        Loading Time...
+    </div>
+</div>
 
 </header>
 
+<div class="stats">
 
+<div class="stat-card">
+<h3>Total Falls</h3>
+<h1 id="totalFalls">0</h1>
+</div>
 
+<div class="stat-card">
+<h3>Today's Alerts</h3>
+<h1 id="todayAlerts">0</h1>
+</div>
 
-<div class="dashboard">
-
-
-<!-- Camera -->
-
-<div class="card">
-
-
-<h2>📷 Live Camera</h2>
-
-
-<img
-id="video"
-src="{{ url_for('video_feed') }}"
-alt="Camera Feed">
-
+<div class="stat-card">
+<h3>System</h3>
+<h1 style="color:lime;">ONLINE</h1>
+</div>
 
 </div>
 
-
-
-
-<!-- Status -->
-
+<div class="dashboard">
 
 <div class="card">
 
+<h2>📷 Live Camera</h2>
+
+<img id="video"
+src="{{ url_for('video_feed') }}"
+alt="Camera Feed">
+
+</div>
+
+<div class="card">
 
 <h2>Current Status</h2>
 
+<div class="pulse"></div>
 
 <h1 id="status">
 Loading...
 </h1>
 
-
 <h2 id="confidence">
 0%
 </h2>
 
-
-
 <div id="alarm">
-
 ⚠ FALL DETECTED
-
 </div>
-
-
 
 <button onclick="resetAlarm()">
-
 Reset Alarm
-
 </button>
 
-
 </div>
 
-
-
 </div>
-
-
-
-
-
-<!-- History -->
-
 
 <div class="card history">
 
-
-<h2>
-📋 Fall Detection History
-</h2>
-
+<h2>📋 Detection History</h2>
 
 <table>
-
 
 <thead>
 
@@ -127,38 +114,28 @@ Reset Alarm
 
 <th>Status</th>
 
-
 </tr>
-
 
 </thead>
 
-
-
-<tbody id="history">
-
-
-</tbody>
-
+<tbody id="history"></tbody>
 
 </table>
 
+</div>
 
 </div>
 
-
-
-</div>
-
-
+<script>
+setInterval(()=>{
+document.getElementById("clock").innerHTML=
+new Date().toLocaleTimeString();
+},1000);
+</script>
 
 <script src="{{ url_for('static', filename='js/alarm.js') }}"></script>
-
 <script src="{{ url_for('static', filename='js/history.js') }}"></script>
-
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 
-
 </body>
-
 </html>
