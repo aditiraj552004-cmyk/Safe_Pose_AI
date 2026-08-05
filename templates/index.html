@@ -1,110 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafePose AI</title>
+
+    <title>SafePose AI - Fall Detection</title>
 
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+        href="{{ url_for('static', filename='css/style.css') }}">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script defer
+        src="{{ url_for('static', filename='js/alarm.js') }}"></script>
+
+    <script defer
+        src="{{ url_for('static', filename='js/history.js') }}"></script>
+
+    <script defer
+        src="{{ url_for('static', filename='js/app.js') }}"></script>
+
 </head>
 
 <body>
 
-<div class="container">
+<div class="background"></div>
 
-    <header>
+<header>
+
+    <div class="logo">
+
         <h1>🩺 SafePose AI</h1>
-        <p>AI Powered Real-Time Fall Detection System</p>
-    </header>
 
-    <div class="cards">
+        <p>Real-Time Human Fall Detection System</p>
 
-        <div class="card">
-            <h3>🟢 System</h3>
-            <h2>Running</h2>
+    </div>
+
+    <div class="status-online">
+
+        <span class="dot"></span>
+
+        System Online
+
+    </div>
+
+</header>
+
+<div class="dashboard">
+
+    <!-- LEFT -->
+
+    <div class="left-panel">
+
+        <div class="card camera-card">
+
+            <div class="card-title">
+
+                📷 Live Camera
+
+            </div>
+
+            <img
+                src="{{ url_for('video_feed') }}"
+                id="videoFeed">
+
         </div>
 
         <div class="card">
-            <h3>📷 Camera</h3>
-            <h2>Connected</h2>
-        </div>
 
-        <div class="card">
-            <h3>🤖 AI Model</h3>
-            <h2>Active</h2>
-        </div>
+            <div class="card-title">
 
-        <div class="card">
-            <h3>🎯 Prediction</h3>
-            <h2 id="prediction">Loading...</h2>
+                📊 Confidence
+
+            </div>
+
+            <div class="progress-container">
+
+                <div
+                    id="progressBar"
+                    class="progress-bar">
+
+                </div>
+
+            </div>
+
+            <h2 id="confidenceText">
+
+                0%
+
+            </h2>
+
         </div>
 
     </div>
 
-    <div class="video-section">
+    <!-- RIGHT -->
 
-        <img src="{{ url_for('video_feed') }}">
+    <div class="right-panel">
 
-    </div>
+        <div class="card prediction-card">
 
-    <div class="confidence-box">
+            <div class="card-title">
 
-        <h2>Confidence</h2>
+                🤖 AI Prediction
 
-        <div class="progress">
+            </div>
 
-            <div class="progress-bar" id="progressBar"></div>
+            <h2 id="prediction">
+
+                Loading...
+
+            </h2>
 
         </div>
 
-        <h3 id="confidence">0%</h3>
+        <div
+            class="card alert-card"
+            id="alertCard">
 
-    </div>
+            <div class="card-title">
 
-    <div class="graph-box">
+                🚨 Alert Status
 
-        <canvas id="confidenceChart"></canvas>
+            </div>
 
-    </div>
+            <h2 id="alarmStatus">
 
-    <div class="history">
+                Safe
 
-        <h2>📋 Fall History</h2>
+            </h2>
 
-        <table>
+        </div>
 
-            <thead>
+        <div class="card">
 
-            <tr>
-                <th>Time</th>
-                <th>Confidence</th>
-                <th>Status</th>
-            </tr>
+            <div class="card-title">
 
-            </thead>
+                ❤️ System Health
 
-            <tbody id="historyBody">
+            </div>
 
-            </tbody>
+            <div class="health-grid">
 
-        </table>
+                <div>
+
+                    Camera
+
+                    <span id="cameraStatus">
+
+                        Online
+
+                    </span>
+
+                </div>
+
+                <div>
+
+                    AI Model
+
+                    <span>
+
+                        Loaded
+
+                    </span>
+
+                </div>
+
+                <div>
+
+                    Backend
+
+                    <span>
+
+                        Running
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <div class="card-title">
+
+                📜 Recent Fall History
+
+            </div>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Time</th>
+
+                        <th>Confidence</th>
+
+                        <th>Status</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="historyTable">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <button
+            id="resetBtn">
+
+            Reset Alarm
+
+        </button>
 
     </div>
 
 </div>
 
-<div class="popup" id="popup">
+<!-- ALERT POPUP -->
 
-    🚨 FALL DETECTED 🚨
+<div
+    id="popup"
+    class="popup">
+
+    <h1>
+
+        🚨 FALL DETECTED
+
+    </h1>
+
+    <p>
+
+        Immediate Assistance Required
+
+    </p>
 
 </div>
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<footer>
 
-<script src="{{ url_for('static', filename='js/alarm.js') }}"></script>
+    SafePose AI © 2026 | Developed using Flask + MediaPipe + TensorFlow + OpenCV
+
+</footer>
 
 </body>
+
 </html>

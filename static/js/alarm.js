@@ -1,60 +1,64 @@
-// ===============================
-// ALARM SOUND
-// ===============================
+// ==========================================
+// SAFEPOSE AI
+// alarm.js
+// ==========================================
 
-const alarm = new Audio("/static/alarm.mpeg");
+// Alarm Audio
+const alarmAudio = new Audio("/static/alarm.mp3");
 
-// Loop the alarm until reset
-alarm.loop = true;
+alarmAudio.loop = true;
 
+// Prevent multiple alarms
 let alarmPlaying = false;
 
-// ===============================
-// CHECK FALL STATUS
-// ===============================
+// Store timeout reference
+let alarmTimeout = null;
 
-async function checkAlarm() {
+// ==============================
+// PLAY ALARM
+// ==============================
 
-    try {
+function playAlarm() {
 
-        const response = await fetch("/status");
-        const data = await response.json();
+    // Already playing
+    if (alarmPlaying) return;
 
-        if (data.alarm) {
+    alarmPlaying = true;
 
-            if (!alarmPlaying) {
+    alarmAudio.currentTime = 0;
 
-                alarm.play().catch(err => {
-                    console.log("Audio blocked:", err);
-                });
+    alarmAudio.play().catch(error => {
+        console.log("Unable to play alarm:", error);
+    });
 
-                alarmPlaying = true;
-            }
+    // Stop automatically after 3 seconds
 
-        } else {
+    alarmTimeout = setTimeout(() => {
 
-            if (alarmPlaying) {
+        stopAlarm();
 
-                alarm.pause();
-                alarm.currentTime = 0;
-
-                alarmPlaying = false;
-            }
-
-        }
-
-    } catch (err) {
-
-        console.log(err);
-
-    }
+    }, 3000);
 
 }
 
-// ===============================
-// CHECK EVERY SECOND
-// ===============================
+// ==============================
+// STOP ALARM
+// ==============================
 
-setInterval(checkAlarm, 1000);
+function stopAlarm() {
 
-checkAlarm();
+    if (alarmTimeout) {
+
+        clearTimeout(alarmTimeout);
+
+        alarmTimeout = null;
+
+    }
+
+    alarmAudio.pause();
+
+    alarmAudio.currentTime = 0;
+
+    alarmPlaying = false;
+
+}

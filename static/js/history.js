@@ -1,95 +1,153 @@
-// history.js
+// ========================================
+// SAFEPOSE AI - app.js
+// ========================================
 
+// HTML Elements
+const predictionText = document.getElementById("prediction");
+const confidenceText = document.getElementById("confidenceText");
+const progressBar = document.getElementById("progressBar");
 
+const popup = document.getElementById("popup");
+const alertCard = document.getElementById("alertCard");
+const alarmStatus = document.getElementById("alarmStatus");
 
-function loadHistory(){
+const resetBtn = document.getElementById("resetBtn");
 
+// Prevent repeated popup/alarm
+let popupVisible = false;
 
-    fetch("/history")
+// ===============================
+// GET STATUS FROM FLASK
+// ===============================
 
+async function updateStatus() {
 
-    .then(response =>
-        response.json()
-    )
+    try {
 
+        const response = await fetch("/status");
 
-    .then(data=>{
+        const data = await response.json();
 
+        // --------------------------
+        // Prediction
+        // --------------------------
 
-        let table =
-        document.getElementById(
-            "history"
-        );
+        predictionText.innerText = data.prediction;
 
+        // --------------------------
+        // Confidence
+        // --------------------------
 
+        confidenceText.innerText =
+            data.confidence.toFixed(1) + "%";
 
-        table.innerHTML = "";
+        progressBar.style.width =
+            data.confidence + "%";
 
+        // Progress bar color
 
+        if (data.confidence >= 80) {
 
-        // Latest event first
+            progressBar.style.background =
+                "linear-gradient(90deg,#ef4444,#ff0000)";
 
-        data.reverse();
+        }
+        else {
 
+            progressBar.style.background =
+                "linear-gradient(90deg,#00d2ff,#00ff88)";
+        }
 
+        // --------------------------
+        // FALL DETECTED
+        // --------------------------
 
-        data.forEach(event=>{
+        if (data.alarm) {
 
+            predictionText.style.color = "#ff4444";
 
-            table.innerHTML += `
+            alarmStatus.innerText = "FALL DETECTED";
 
-            <tr>
+            alarmStatus.className = "danger";
 
-            <td>
-            ${event.Time}
-            </td>
+            alertCard.classList.add("alert-active");
 
+            if (!popupVisible) {
 
-            <td>
-            ${event.Confidence}%
-            </td>
+                popupVisible = true;
 
+                popup.classList.add("show");
 
-            <td>
-            ${event.Status}
-            </td>
+                playAlarm();
 
+                // Hide popup after 3 sec
 
-            </tr>
+                setTimeout(() => {
 
-            `;
+                    popup.classList.remove("show");
 
+                    popupVisible = false;
 
-        });
+                }, 3000);
 
+            }
 
+        }
 
-    })
+        // --------------------------
+        // NORMAL
+        // --------------------------
 
+        else {
 
-    .catch(error=>{
+            predictionText.style.color = "#22c55e";
 
+            alarmStatus.innerText = "SAFE";
 
-        console.log(
-            "History Error:",
-            error
-        );
+            alarmStatus.className = "safe";
 
+            alertCard.classList.remove("alert-active");
 
-    });
+            popup.classList.remove("show");
 
+            stopAlarm();
+
+            popupVisible = false;
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
 
 }
 
+// ========================================
+// UPDATE EVERY SECOND
+// ========================================
 
+setInterval(updateStatus, 1000);
 
-// Refresh history every 5 seconds
+updateStatus();
 
-setInterval(
-    loadHistory,
-    5000
-);
+// ========================================
+// RESET BUTTON
+// ========================================
 
+resetBtn.addEventListener("click", async () => {
 
+    await fetch("/reset_alarm");
 
-loadHistory();
+    popup.classList.remove("show");
+
+    stopAlarm();
+
+    popupVisible = false;
+
+    updateStatus();
+
+});

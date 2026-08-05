@@ -1,136 +1,153 @@
-// ===============================
-// ELEMENTS
-// ===============================
+// ========================================
+// SAFEPOSE AI - app.js
+// ========================================
 
-const prediction = document.getElementById("prediction");
-const confidence = document.getElementById("confidence");
+// HTML Elements
+const predictionText = document.getElementById("prediction");
+const confidenceText = document.getElementById("confidenceText");
 const progressBar = document.getElementById("progressBar");
-const historyBody = document.getElementById("historyBody");
+
 const popup = document.getElementById("popup");
+const alertCard = document.getElementById("alertCard");
+const alarmStatus = document.getElementById("alarmStatus");
+
+const resetBtn = document.getElementById("resetBtn");
+
+// Prevent repeated popup/alarm
+let popupVisible = false;
 
 // ===============================
-// CHART
-// ===============================
-
-const ctx = document.getElementById("confidenceChart").getContext("2d");
-
-const confidenceChart = new Chart(ctx, {
-    type: "line",
-    data: {
-        labels: [],
-        datasets: [{
-            label: "Confidence %",
-            data: [],
-            borderColor: "#38bdf8",
-            backgroundColor: "rgba(56,189,248,0.2)",
-            borderWidth: 3,
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        animation: true,
-        scales: {
-            y: {
-                min: 0,
-                max: 100
-            }
-        }
-    }
-});
-
-// ===============================
-// UPDATE STATUS
+// GET STATUS FROM FLASK
 // ===============================
 
 async function updateStatus() {
 
-    const response = await fetch("/status");
-    const data = await response.json();
+    try {
 
-    prediction.innerHTML = data.prediction;
+        const response = await fetch("/status");
 
-    confidence.innerHTML = data.confidence + "%";
+        const data = await response.json();
 
-    progressBar.style.width = data.confidence + "%";
+        // --------------------------
+        // Prediction
+        // --------------------------
 
-    if (data.prediction === "FALL DETECTED") {
+        predictionText.innerText = data.prediction;
 
-        prediction.style.color = "red";
+        // --------------------------
+        // Confidence
+        // --------------------------
 
-        popup.style.display = "block";
+        confidenceText.innerText =
+            data.confidence.toFixed(1) + "%";
 
-    } else {
+        progressBar.style.width =
+            data.confidence + "%";
 
-        prediction.style.color = "#22c55e";
+        // Progress bar color
 
-        popup.style.display = "none";
+        if (data.confidence >= 80) {
+
+            progressBar.style.background =
+                "linear-gradient(90deg,#ef4444,#ff0000)";
+
+        }
+        else {
+
+            progressBar.style.background =
+                "linear-gradient(90deg,#00d2ff,#00ff88)";
+        }
+
+        // --------------------------
+        // FALL DETECTED
+        // --------------------------
+
+        if (data.alarm) {
+
+            predictionText.style.color = "#ff4444";
+
+            alarmStatus.innerText = "FALL DETECTED";
+
+            alarmStatus.className = "danger";
+
+            alertCard.classList.add("alert-active");
+
+            if (!popupVisible) {
+
+                popupVisible = true;
+
+                popup.classList.add("show");
+
+                playAlarm();
+
+                // Hide popup after 3 sec
+
+                setTimeout(() => {
+
+                    popup.classList.remove("show");
+
+                    popupVisible = false;
+
+                }, 3000);
+
+            }
+
+        }
+
+        // --------------------------
+        // NORMAL
+        // --------------------------
+
+        else {
+
+            predictionText.style.color = "#22c55e";
+
+            alarmStatus.innerText = "SAFE";
+
+            alarmStatus.className = "safe";
+
+            alertCard.classList.remove("alert-active");
+
+            popup.classList.remove("show");
+
+            stopAlarm();
+
+            popupVisible = false;
+
+        }
+
     }
 
-    // Chart
+    catch (error) {
 
-    const time = new Date().toLocaleTimeString();
+        console.log(error);
 
-    confidenceChart.data.labels.push(time);
-
-    confidenceChart.data.datasets[0].data.push(data.confidence);
-
-    if (confidenceChart.data.labels.length > 15) {
-
-        confidenceChart.data.labels.shift();
-
-        confidenceChart.data.datasets[0].data.shift();
     }
-
-    confidenceChart.update();
 
 }
 
-// ===============================
-// LOAD HISTORY
-// ===============================
+// ========================================
+// UPDATE EVERY SECOND
+// ========================================
 
-async function loadHistory() {
-
-    const response = await fetch("/history");
-
-    const data = await response.json();
-
-    historyBody.innerHTML = "";
-
-    data.reverse().forEach(item => {
-
-        historyBody.innerHTML += `
-
-        <tr>
-
-            <td>${item.Time}</td>
-
-            <td>${item["Confidence (%)"] || item.Confidence}%</td>
-
-            <td>${item.Status}</td>
-
-        </tr>
-
-        `;
-
-    });
-
-}
-
-// ===============================
-// AUTO UPDATE
-// ===============================
-
-setInterval(() => {
-
-    updateStatus();
-
-    loadHistory();
-
-}, 1000);
+setInterval(updateStatus, 1000);
 
 updateStatus();
 
-loadHistory();
+// ========================================
+// RESET BUTTON
+// ========================================
+
+resetBtn.addEventListener("click", async () => {
+
+    await fetch("/reset_alarm");
+
+    popup.classList.remove("show");
+
+    stopAlarm();
+
+    popupVisible = false;
+
+    updateStatus();
+
+});
